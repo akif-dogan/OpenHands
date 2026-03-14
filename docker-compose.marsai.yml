@@ -1,0 +1,106 @@
+# MarsAI Developer Platform — Production Docker Compose
+# Runs OpenHands + MarsAI backend together.
+#
+# Usage:
+#   docker compose -f docker-compose.marsai.yml up -d --build
+#
+# Required env vars (in .env or environment):
+#   GOOGLE_API_KEY — Gemini API key (for LLM)
+#   MARSAI_API_KEY — Optional, for authenticated MarsAI API access
+
+services:
+  openhands:
+    build:
+      context: ./
+      dockerfile: ./containers/app/Dockerfile
+    image: marsai-openhands:latest
+    container_name: marsai-openhands
+    environment:
+      # Agent server (sandbox) image
+      - AGENT_SERVER_IMAGE_REPOSITORY=${AGENT_SERVER_IMAGE_REPOSITORY:-ghcr.io/openhands/agent-server}
+      - AGENT_SERVER_IMAGE_TAG=${AGENT_SERVER_IMAGE_TAG:-1.12.0-python}
+      # Workspace
+      - WORKSPACE_MOUNT_PATH=${WORKSPACE_BASE:-/opt/workspace}
+      # LLM — Gemini (override with any litellm-supported model)
+      - LLM_MODEL=${LLM_MODEL:-gemini/gemini-2.0-flash}
+      - LLM_API_KEY=${GOOGLE_API_KEY}
+      # MarsAI pipeline connection (passed to MCP server via microagent env)
+      - MARSAI_API_URL=http://host.docker.internal:8000
+      - MARSAI_API_KEY=${MARSAI_API_KEY:-}
+    ports:
+      - "${OPENHANDS_PORT:-3000}:3000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - openhands_data:/.openhands
+      - openhands_workspaces:/opt/workspace
+    restart: unless-stopped
+    depends_on:
+      marsai:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # MarsAI Backend (CEO pipeline + API)
+  # This references the MarsAI project's existing docker setup.
+  # In production, marsai services run from marsai-automation-agent/docker-compose.prod.yml.
+  # This compose file assumes MarsAI is already running on port 8000.
+  # If you want self-contained deployment, merge with marsai docker-compose.prod.yml.
+  marsai:
+    build:
+      context: /home/ubuntu/marsai-automation-agent
+      dockerfile: Dockerfile
+    image: marsai-backend:latest
+    container_name: marsai-backend
+    env_file:
+      - /home/ubuntu/marsai-automation-agent/.env
+    ports:
+      - "8000:8000"
+    depends_on:
+      marsai-postgres:
+        condition: service_healthy
+      marsai-redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+
+  marsai-postgres:
+    image: postgres:16-alpine
+    container_name: marsai-postgres
+    environment:
+      POSTGRES_DB: marsai
+      POSTGRES_USER: marsai
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-marsai-dev-2026}
+    volumes:
+      - marsai_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U marsai"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  marsai-redis:
+    image: redis:7-alpine
+    container_name: marsai-redis
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  openhands_data:
+  openhands_workspaces:
+  marsai_pgdata:

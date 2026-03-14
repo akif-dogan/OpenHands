@@ -1,0 +1,22 @@
+# MarsAI Developer Platform — OpenHands Configuration
+# This config is used for development and production deployment.
+
+[core]
+workspace_base = "./workspace"
+default_agent = "CodeActAgent"
+max_iterations = 100
+max_budget_per_task = 0.0
+max_concurrent_conversations = 5
+
+[llm]
+# Default LLM — Gemini (cost-effective for testing)
+# Override via environment: LLM_MODEL, LLM_API_KEY
+model = "gemini/gemini-2.0-flash"
+api_key = ""
+temperature = 0.1
+max_output_tokens = 8192
+
+[sandbox]
+runtime_container_image = "ghcr.io/openhands/runtime:latest"
+user_id = 1000
+timeout = 300

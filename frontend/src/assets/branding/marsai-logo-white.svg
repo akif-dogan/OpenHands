@@ -1,0 +1,13 @@
+<svg width="1365" height="1365" viewBox="0 -24 200 176" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Mars planet -->
+  <circle cx="64" cy="64" r="38" fill="#E8553A"/>
+  <ellipse cx="52" cy="52" rx="12" ry="8" fill="#D44A32" opacity="0.6"/>
+  <ellipse cx="78" cy="72" rx="8" ry="6" fill="#D44A32" opacity="0.5"/>
+  <ellipse cx="58" cy="76" rx="6" ry="4" fill="#D44A32" opacity="0.4"/>
+  <!-- Orbit ring -->
+  <ellipse cx="64" cy="64" rx="48" ry="16" transform="rotate(-20 64 64)" stroke="#FFB347" stroke-width="2.5" fill="none" opacity="0.8"/>
+  <!-- AI text -->
+  <text x="120" y="58" font-family="Arial, sans-serif" font-weight="bold" font-size="36" fill="white" letter-spacing="2">AI</text>
+  <!-- Mars text -->
+  <text x="120" y="90" font-family="Arial, sans-serif" font-weight="300" font-size="20" fill="white" opacity="0.8" letter-spacing="4">MARS</text>
+</svg>
