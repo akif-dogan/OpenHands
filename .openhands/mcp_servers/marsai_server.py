@@ -43,6 +43,8 @@ def _headers() -> dict[str, str]:
 
 def _extract_code_blocks(text: str) -> list[dict[str, str]]:
     """Extract markdown code blocks with optional filename."""
+    if not text or not isinstance(text, str):
+        return []
     pattern = r'```(\w+)(?:\s+filename="([^"]+)")?\s*\n(.*?)```'
     blocks = re.findall(pattern, text, re.DOTALL)
     if not blocks:
@@ -71,16 +73,18 @@ def _find_best_deliverable(events: list[dict]) -> str:
 
         # Accumulate token content
         if evt.get("event") == "token" and data.get("content"):
-            all_content += data["content"]
+            all_content += str(data["content"])
 
         # Check message events
         if evt.get("event") == "message" and data.get("role") == "ai":
-            content = data.get("content", "")
+            content = data.get("content", "") or ""
             if isinstance(content, list):
                 content = "\n".join(
                     p.get("text", "") if isinstance(p, dict) else str(p)
                     for p in content
                 )
+            if not isinstance(content, str):
+                content = str(content)
             count = content.count("```")
             if count > best_count:
                 best_count = count
