@@ -251,13 +251,27 @@ async def marsai_run_pipeline(
                 state = r.json()
                 vals = state.get("values", state)
 
+                def _to_str(val) -> str:
+                    """Convert value to string, handling list content format."""
+                    if isinstance(val, str):
+                        return val
+                    if isinstance(val, list):
+                        parts = []
+                        for p in val:
+                            if isinstance(p, dict):
+                                parts.append(p.get("text", "") or p.get("content", ""))
+                            elif isinstance(p, str):
+                                parts.append(p)
+                        return "\n".join(x for x in parts if x)
+                    return str(val) if val else ""
+
                 # Priority: final_deliverable > department_results > messages
-                deliverable = vals.get("final_deliverable", "")
+                deliverable = _to_str(vals.get("final_deliverable", ""))
 
                 if not deliverable:
                     for dr in reversed(vals.get("department_results", [])):
                         if isinstance(dr, dict):
-                            d = dr.get("deliverable", "") or dr.get("output", "")
+                            d = _to_str(dr.get("deliverable", "") or dr.get("output", ""))
                             if d and len(d) > 50:
                                 deliverable = d
                                 break
