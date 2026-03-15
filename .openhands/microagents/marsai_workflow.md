@@ -88,12 +88,23 @@ Requirements:
 When the pipeline returns:
 
 1. **Check the result status** — if error, inform the user and suggest retry
-2. **If code_files exist** — write each file to `/workspace/project/` and set up the dev server:
-   - For HTML/CSS/JS: `python -m http.server 8011`
-   - For React/Vite: Create package.json if missing, `npm install && npm run dev -- --port 8011`
-   - For Next.js: Create package.json if missing, `npm install && npm run dev -p 8011`
-3. **Show the user a summary** — what was built, which department handled it, quality score
-4. **Tell the user** the preview is available in the App panel (right side)
+2. **Read the deliverable** — it contains the professional analysis, architecture decisions,
+   and technical specifications from the MarsAI engineering team.
+3. **YOU write the code based on the deliverable** — The pipeline provides the spec/plan,
+   YOU implement it as actual code files. This is your primary job.
+   - Use the pipeline's architecture decisions, tech stack choices, and requirements
+   - Write complete, working code files to `/workspace/project/`
+   - Set up the dev server:
+     - For HTML/CSS/JS: `python -m http.server 8011`
+     - For React/Vite: `npm install && npm run dev -- --port 8011 --host 0.0.0.0`
+     - For Next.js: `npm install && npm run dev -p 8011 -H 0.0.0.0`
+4. **If code_files already exist in the result** — use them directly, write to sandbox
+5. **Show the user a summary** — what was built, which department handled it
+6. **Tell the user** the preview is available in the App panel (right side)
+
+IMPORTANT: Do NOT call the pipeline multiple times for the same task. Call it ONCE,
+get the spec, then implement the code yourself. The pipeline is for analysis and planning,
+you are for implementation.
 
 ### Step 5: Handle Follow-up Requests
 - **Small changes** (colors, text, spacing, simple additions): Edit files directly in sandbox. No pipeline needed.
