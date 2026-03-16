@@ -178,8 +178,16 @@ class SetAuthCookieMiddleware:
         ):
             return False
 
-        # Webhooks access is controlled using separate API keys
+        # Webhooks access is controlled using separate API keys (X-Session-API-Key).
+        # Pre-set ADMIN context so downstream dependency injectors (UserContext)
+        # don't raise NoCredentialsError during concurrent dependency resolution.
         if path.startswith('/api/v1/webhooks/'):
+            from openhands.app_server.user.specifiy_user_context import (
+                ADMIN,
+                USER_CONTEXT_ATTR,
+            )
+
+            setattr(request.state, USER_CONTEXT_ATTR, ADMIN)
             return False
 
         is_mcp = path.startswith('/mcp')
